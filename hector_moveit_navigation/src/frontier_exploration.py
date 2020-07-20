@@ -33,7 +33,22 @@ def navigator_client():
 	goal = hector_moveit_navigation.msg.NavigationGoal()
 	rate = rospy.Rate(2)
 
+	if not rospy.is_shutdown():
+		goal.goal_pose.position.x = 0;
+		goal.goal_pose.position.y = 0;
+		goal.goal_pose.position.z = 1;
+		goal.goal_pose.orientation.x = 0;
+		goal.goal_pose.orientation.y = 0;
+		goal.goal_pose.orientation.z = 0;
+		goal.goal_pose.orientation.w = 1;
+		
+		rospy.loginfo("Sending takeoff position (0, 0, 1)")
+		client.send_goal(goal)
+
+		rospy.loginfo("Waiting for takeoff")
+		client.wait_for_result()
 	# Keep running while ros is okay
+
 	while not rospy.is_shutdown():
 		global frontiers
 
@@ -47,6 +62,7 @@ def navigator_client():
 		for pose in current_frontiers.poses:
 			goal.goal_pose = pose
 			rospy.loginfo("Sending goal position (%f, %f, %f)", pose.position.x, pose.position.y, pose.position.z)
+			rospy.loginfo("With pose (%f, %f, %f, %f)", pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
 			client.send_goal(goal)
 
 			rospy.loginfo("Waiting for result")
