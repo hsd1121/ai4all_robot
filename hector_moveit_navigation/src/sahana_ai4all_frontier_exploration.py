@@ -43,7 +43,6 @@ def navigator_client():
 		goal.goal_pose.orientation.z = 0;
 		goal.goal_pose.orientation.w = 1;
 		
-        
 
 
 		rospy.loginfo("Sending takeoff position (0, 0, 1)")
@@ -58,25 +57,25 @@ def navigator_client():
 
 		# Get current frontiers
 		current_frontiers = frontiers
-	        random_frontiers_list = []
-	        rospy.loginfo("Selecting 5 random poses")
-	        for i in range (0, 5):
+		random_frontiers_list = []
+		rospy.loginfo("Selecting 5 random poses")
+		for i in range (0, 5):
 			number = random.randint(0, len(current_frontiers.poses)-1)
-            		while number in random_frontiers_list:
-                		number = random.randint(0, len(current_frontiers.poses)-1)
-            		random_frontiers_list.append(number)
-            
+			while number in random_frontiers_list:
+				number = random.randint(0, len(current_frontiers.poses)-1)
+			random_frontiers_list.append(number)
+
 		''' 
-			Optimize the for loop below to more efficiently navigate to frontiers
+		Optimize the for loop below to more efficiently navigate to frontiers
 		'''
 		rospy.loginfo("Converting random pose list to pose array")
-     		random_frontiers = PoseArray()
+		random_frontiers = PoseArray()
 		for item in random_frontiers_list:
 			rospy.loginfo("Random number: %d", item)
 			temp_pose = current_frontiers.poses[item]
 			random_frontiers.poses.append(temp_pose)
 
-	        rospy.loginfo("Random Frontier Pose Array Size: %d", len(random_frontiers.poses))
+		rospy.loginfo("Random Frontier Pose Array Size: %d", len(random_frontiers.poses))
 		for pose in random_frontiers.poses:
 			goal.goal_pose = pose
 			rospy.loginfo("Sending goal position (%f, %f, %f)", pose.position.x, pose.position.y, pose.position.z)

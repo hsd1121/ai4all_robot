@@ -15,8 +15,8 @@ frontiers = PoseArray()
 
 
 def calculateDistance(x1,y1,z1,x2,y2,z2):
-    dist = math.sqrt((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)
-    return dist
+	dist = math.sqrt((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)
+	return dist
 
 
 # Get frontiers
@@ -68,7 +68,7 @@ def navigator_client():
 		# Get current frontiers
 		# rospy.loginfo("Updating frontier list")
 		current_frontiers = frontiers
-        
+
 		rospy.loginfo("# of frontiers: %d", len(current_frontiers.poses))
 
 		# "cluster" voxels by distance and eliminate voxels that are too close to others
