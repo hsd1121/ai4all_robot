@@ -16,15 +16,17 @@ def dista(x1, y1, z1, x2, y2, z2):
 	d = math.sqrt(math.pow(x2 - x1, 2) +
 		math.pow(y2 - y1, 2) +
 		math.pow(z2 - z1, 2)* 1.0) 
+	return d
 
 
 def hasVisited(current_Pose):
 	global VisitedVoxels
+	rospy.loginfo("Length of VisitedVoxels List: %d", len(VisitedVoxels))
 	for r in VisitedVoxels:
-		if(dista(r[0], r[1], r[2],current_Pose.position.x, current_Pose.position.y,current_Pose.position.z, ))>2:
-			return False
-		else:
+		distance = dista(r[0], r[1], r[2],current_Pose.position.x, current_Pose.position.y,current_Pose.position.z)
+		if(distance < 2):
 			return True
+	return False
 
 
 # Get frontiers
@@ -50,9 +52,10 @@ def navigator_client():
 	# Initialize navigation client goal message
 	goal = hector_moveit_navigation.msg.NavigationGoal()
 	rate = rospy.Rate(2)
-	global VisitedVoxels
+	
 
 	if not rospy.is_shutdown():
+		global VisitedVoxels
 		goal.goal_pose.position.x = 0;
 		goal.goal_pose.position.y = 0;
 		goal.goal_pose.position.z = 1;
@@ -79,19 +82,15 @@ def navigator_client():
 		'''
 		for pose in current_frontiers.poses:
 			goal.goal_pose = pose
-			prev_Visited = False
-
-			for num in VisitedVoxels:
-				if hasVisited(pose):
-					rospy.loginfo("Goal pose of (%f, %f, %f) hase been visited", pose.position.x, pose.position.y, pose.position.z)
-					prev_Visited = True
-					break
-			client.send_goal(goal)
-			rospy.loginfo("Sending goal position (%f, %f, %f)", pose.position.x, pose.position.y, pose.position.z)
-			rospy.loginfo("Waiting for result")
-			client.wait_for_result()
-			VisitedVoxels.append( [pose.position.x, pose.position.y, pose.position.z] )
-
+			if hasVisited(pose):
+				rospy.loginfo("Goal pose of (%f, %f, %f) has been visited", pose.position.x, pose.position.y, pose.position.z)
+			else:	
+				global VisitedVoxels
+				client.send_goal(goal)
+				rospy.loginfo("Sending goal position (%f, %f, %f)", pose.position.x, pose.position.y, pose.position.z)
+				rospy.loginfo("Waiting for result")
+				client.wait_for_result()
+				VisitedVoxels.append( [pose.position.x, pose.position.y, pose.position.z] )
 
 		# Sleep for half a second
 		rate.sleep()
