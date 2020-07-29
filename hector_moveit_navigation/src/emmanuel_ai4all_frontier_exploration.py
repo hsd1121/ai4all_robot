@@ -8,22 +8,15 @@ import hector_moveit_navigation.msg
 import octomap_msgs.msg
 import math
 VisitedVoxels= []
-#VisitedVoxels.append( [goal.position.x, goal.position.y, goal.position.z] )
-
 
 frontiers = PoseArray()
 
-
-def Vox(voxel_List,voxel_pose):
-	if voxel_List[0] ==voxel_pose.position.x and voxel_List[1] ==voxel_pose.position.y and voxel_List[2] ==voxel_pose.position.z:
-		return True
-	else:
-		return False
 
 def dista(x1, y1, z1, x2, y2, z2):  
 	d = math.sqrt(math.pow(x2 - x1, 2) +
 		math.pow(y2 - y1, 2) +
 		math.pow(z2 - z1, 2)* 1.0) 
+
 
 def hasVisited(current_Pose):
 	global VisitedVoxels
@@ -32,6 +25,7 @@ def hasVisited(current_Pose):
 			return False
 		else:
 			return True
+
 
 # Get frontiers
 def callback(data):
@@ -88,13 +82,12 @@ def navigator_client():
 			prev_Visited = False
 
 			for num in VisitedVoxels:
-				if Vox(num,pose) or  hasVisited(pose):
+				if hasVisited(pose):
+					rospy.loginfo("Goal pose of (%f, %f, %f) hase been visited", pose.position.x, pose.position.y, pose.position.z)
 					prev_Visited = True
-
-
+					break
 			client.send_goal(goal)
 			rospy.loginfo("Sending goal position (%f, %f, %f)", pose.position.x, pose.position.y, pose.position.z)
-			rospy.loginfo("With pose (%f, %f, %f, %f)", pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
 			rospy.loginfo("Waiting for result")
 			client.wait_for_result()
 			VisitedVoxels.append( [pose.position.x, pose.position.y, pose.position.z] )

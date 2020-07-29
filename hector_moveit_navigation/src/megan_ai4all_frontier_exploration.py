@@ -4,6 +4,7 @@ import actionlib
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseArray
 import math
+import random
 
 import hector_moveit_navigation.msg
 import octomap_msgs.msg
@@ -68,13 +69,25 @@ def navigator_client():
 		# Get current frontiers
 		# rospy.loginfo("Updating frontier list")
 		current_frontiers = frontiers
-
+		random_frontiers_list = []
+		rospy.loginfo("Selecting 10 random poses")
+		for i in range (0, 10):
+			number = random.randint(0, len(current_frontiers.poses)-1)
+			while number in random_frontiers_list:
+				number = random.randint(0, len(current_frontiers.poses)-1)
+			random_frontiers_list.append(number)
 		rospy.loginfo("# of frontiers: %d", len(current_frontiers.poses))
+
+		rospy.loginfo("Converting random pose list to pose array")
+		random_frontiers = PoseArray()
+		for item in random_frontiers_list:
+			temp_pose = current_frontiers.poses[item]
+			random_frontiers.poses.append(temp_pose)
 
 		# "cluster" voxels by distance and eliminate voxels that are too close to others
 		rospy.loginfo("Converting poses to list")
 		pose_list = []
-		for pose in current_frontiers.poses:
+		for pose in random_frontiers.poses:
 			pose_list.append([pose.position.x, pose.position.y, pose.position.z])
 
 		rospy.loginfo("Starting linkage")
@@ -83,27 +96,18 @@ def navigator_client():
 
 		clusters = fcluster(Z, 2, criterion='distance')
 		rospy.loginfo("# of clusters: %d", len(set(clusters)))
-		'''
-		for pose in current_frontiers.poses:
-			x1 = pose.position.x
-			y1 = pose.position.y
-			z1 = pose.position.z
-			for pose2 in current_frontiers.poses:
-				x2 = pose2.position.x
-				y2 = pose2.position.y
-				z2 = pose2.position.z
-				if calculateDistance(x1,y1,z1,x2,y2,z2) >= 2:
-					visiting_frontiers.poses.append(pose2)
 
-
-		'''
+		cluster_frontiers = PoseArray()
+		for i in range(1, len(set(clusters))+1):
+			cluster_index = clusters.tolist().index(i)
+			temp_pose2 = random_frontiers.poses[cluster_index]
+			cluster_frontiers.poses.append(temp_pose2)
 
 		''' 
 			Optimize the for loop below to more efficiently navigate to frontiers
 		'''
-		'''
-		rospy.loginfo("# of frontiers: %d", len(visiting_frontiers.poses))
-		for pose in visiting_frontiers.poses:
+
+		for pose in cluster_frontiers.poses:
 			goal.goal_pose = pose
 			rospy.loginfo("Sending goal position (%f, %f, %f)", pose.position.x, pose.position.y, pose.position.z)
 			rospy.loginfo("With pose (%f, %f, %f, %f)", pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
@@ -111,7 +115,7 @@ def navigator_client():
 
 			rospy.loginfo("Waiting for result")
 			client.wait_for_result()
-		'''
+
 		# Sleep for half a second
 		rospy.loginfo("Sleep")
 		rate.sleep()

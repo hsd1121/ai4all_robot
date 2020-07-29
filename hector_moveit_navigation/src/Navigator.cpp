@@ -311,7 +311,7 @@ void Quadrotor::findFrontier()
             double z_cur = n.getZ();
             if(x_cur > XMIN && x_cur < XMAX && 
                y_cur > YMIN && y_cur < YMAX && 
-               z_cur > ZMIN && z_cur < ZMAX)
+               z_cur > 1 && z_cur < ZMAX)
             {
                 
                 if(!current_map->isNodeOccupied(*n))
