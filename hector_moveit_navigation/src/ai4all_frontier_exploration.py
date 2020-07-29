@@ -28,6 +28,15 @@ def hasVisited(current_Pose):
 			return True
 	return False
 
+def euler_to_quaternion(roll, pitch, yaw):
+
+        qx = math.sin(roll/2) * math.cos(pitch/2) * math.cos(yaw/2) - math.cos(roll/2) * math.sin(pitch/2) * math.sin(yaw/2)
+        qy = math.cos(roll/2) * math.sin(pitch/2) * math.cos(yaw/2) + math.sin(roll/2) * math.cos(pitch/2) * math.sin(yaw/2)
+        qz = math.cos(roll/2) * math.cos(pitch/2) * math.sin(yaw/2) - math.sin(roll/2) * math.sin(pitch/2) * math.cos(yaw/2)
+        qw = math.cos(roll/2) * math.cos(pitch/2) * math.cos(yaw/2) + math.sin(roll/2) * math.sin(pitch/2) * math.sin(yaw/2)
+
+        return [qx, qy, qz, qw]
+
 # Get frontiers
 def callback(data):
 	global frontiers
@@ -116,15 +125,30 @@ def navigator_client():
 		''' 
 			Optimize the for loop below to more efficiently navigate to frontiers
 		'''
-
+		yaw = 0
 		for pose in cluster_frontiers.poses:
 			if hasVisited(pose):
 				rospy.loginfo("Goal pose of (%f, %f, %f) has been visited", pose.position.x, pose.position.y, pose.position.z)
 			else:	
 				global VisitedVoxels
-				goal.goal_pose = pose
+
+				orientation = euler_to_quaternion(0, 0, yaw)
+
+				pose.orientation.x = orientation[0]
+				pose.orientation.y = orientation[1]
+				pose.orientation.z = orientation[2]
+				pose.orientation.w = orientation[3]
+
+				if yaw < 270:
+					yaw += 90
+				else:
+					yaw = 0
+
+				goal.goal_pose = pose			
+
 				client.send_goal(goal)
 				rospy.loginfo("Sending goal position (%f, %f, %f)", pose.position.x, pose.position.y, pose.position.z)
+				rospy.loginfo("with orientation (%f, %f, %f, %f)", pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
 				rospy.loginfo("Waiting for result")
 				client.wait_for_result()
 				VisitedVoxels.append( [pose.position.x, pose.position.y, pose.position.z] )
